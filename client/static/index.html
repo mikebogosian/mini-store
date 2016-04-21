@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mini Store</title>
+ <!-- THESE TWO VERSIONS BELOW MUST MATCH!!!! -->
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular-route.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+    //  inject the ngRoute dependency in the module.
+    var myApp = angular.module('myApp', ['ngRoute']);
+    //  use the config method to set up routing:
+    myApp.config(function ($routeProvider) {
+      $routeProvider
+        .when('/customers',{
+            templateUrl: 'partials/customers.html',
+            controller: 'customersController'
+        })
+        .when('/orders',{
+            templateUrl: 'partials/orders.html',
+            controller: 'ordersController'
+        })
+        .when('/products',{
+            templateUrl: 'partials/products.html',
+            controller: 'productsController', 
+        })
+        .when('/settings',{
+            templateUrl: 'partials/settings.html',
+            controller: 'ordersController'
+        })
+        .when('/dashboard',{
+            templateUrl: 'partials/dashboard.html',
+            controller: 'dashController'
+        })
+        .otherwise('/dashboard',{
+          redirectTo: '/partials/dashboard.html'
+        });
+    });
+    //  build the controllers
+    myApp.controller('customersController', customersController )
+    myApp.controller('productsController', productsController ) 
+    myApp.controller('ordersController', ordersController)
+    myApp.controller('dashController', dashController)
+
+    myApp.factory('customerFactory', customerFactory)
+    myApp.factory('orderFactory', orderFactory)
+    myApp.factory('productFactory', productFactory)
+
+
+
+    function customerFactory($http){
+      var factory = {};
+
+      var customers = [{}];
+
+      factory.list = function(callback){
+
+        $http.get('/customers').success(function(output){
+
+          customers = output;
+          // console.log(customers, "from database");
+          callback(customers);
+        })
+      }
+
+      factory.find = function(callback){
+        $http.get('/find', data).success(function(results){
+          callback(results)
+        })
+      }
+
+      factory.createCustomer = function(data, callback){
+        $http.post('/customers', data).success(function(response){
+          callback();
+        })
+      }
+
+      factory.removeCustomer = function(data, callback){
+        // console.log(data);
+        $http.post('/remove', data).success(function(response){
+          callback();
+        })
+      }
+
+      return factory;
+    }
+
+    function orderFactory($http){
+      var factory = {};
+
+      factory.list = function(callback){
+        callback(orders)
+      }
+
+
+      factory.getOrders = function(callback){
+        $http.get('/orders').success(function(output){
+          // console.log(output)
+
+          orders = output;
+          // console.log(customers, "from database");
+          callback(orders);
+        })
+
+      }
+
+        factory.createOrder = function(data, callback){
+          console.log(data, "order in the factory");
+        $http.post('/orders', data).success(function(response){
+
+          console.log(response, "create Factory response");
+          callback(response);
+        })
+      }
+
+
+
+      return factory;
+    }
+
+    function productFactory($http){
+    var factory = {};
+
+      factory.getProducts = function(callback){
+        $http.get('/products').success(function(output){
+          // console.log(output)
+
+          products = output;
+          // console.log(customers, "from database");
+          callback(products);
+        })
+
+      }
+
+      factory.createProduct = function(data, callback){
+          console.log(data, "order in the factory");
+        $http.post('/addProduct', data).success(function(response){
+          console.log(response, "after successfully added");
+          callback();
+        })
+      }
+
+      return factory;
+
+    }
+    
+    function customersController(customerFactory, $scope){
+
+          function getCustomers(){
+
+            customerFactory.list(function(data){
+              // console.log(data, "this is coming from my factory var customers, it's my hard coded object");
+              $scope.customers = data; // $scope.users makes 'users' object available to be used in the html with ng-repeat. This also gets updated anytime a new user is added.
+            })
+          }
+          getCustomers(); // you need to execute the function in order for it to be used
+
+
+         $scope.addCustomer = function(data){
+          if($scope.isDuplicate()){
+            console.log('Dupe!!!');
+            $scope.dupe_msg = "Cannot add name because it already exists";}
+            else{
+              customerFactory.createCustomer($scope.newCustomer,function(){ 
+              $scope.newCustomer = {};    // sets input fields to clear.
+               
+              getCustomers()              
+            });
+            }
+
+          }       
+    
+          $scope.removeCustomer = function(Customer){
+            customerFactory.removeCustomer(Customer, getCustomers);
+          }
+
+          $scope.isDuplicate = function(){
+        
+            for(var i=0;i<$scope.customers.length;i++){
+                if($scope.newCustomer !== undefined){
+                    if($scope.newCustomer.name == $scope.customers[i].name){
+                        $scope.dup_msg = "name is already used!"
+                        return true;
+                    }
+                }
+            }
+        
+          return false; 
+          }
+    }
+
+    function ordersController(orderFactory, customerFactory, productFactory, $scope){
+          $scope.customers = [];
+          $scope.products = [];
+          $scope.newOrder = {};
+            
+
+          function getCustomers(){
+
+            customerFactory.list(function(data){
+              // console.log(data) 
+              $scope.customers = data;
+              // console.log($scope.customers[0].name)
+              $scope.newOrder.name = $scope.customers[0];
+              // console.log($scope.newOrder) 
+            })
+          }
+          getCustomers();
+
+          function getProducts(){
+
+            productFactory.getProducts(function(data){
+              $scope.products = data; 
+              // console.log($scope.products[0].productName);
+              $scope.newOrder.product = $scope.products[0];
+            })
+          }
+          getProducts();
+
+          function getOrders(){
+
+            orderFactory.getOrders(function(data){
+              // console.log(data, "this is coming from my factory var customers, it's my hard coded object");
+              $scope.orders = data;
+              // console.log($scope.orders) // $scope.users makes 'users' object available to be used in the html with ng-repeat. This also gets updated anytime a new user is added.
+
+            })
+          }
+          getOrders();
+
+        $scope.addOrder = function(){
+          console.log($scope.newOrder, "order enters controller");
+           // this is form data getting passed through from HTML View
+
+            orderFactory.createOrder($scope.newOrder,function(data){
+
+              $scope.error = data.errors; 
+              $scope.newOrder = {};    // sets input fields to clear.
+               
+              getOrders()              
+            });
+    
+          }
+
+      }
+
+    function productsController(productFactory, $scope){
+
+      function getProducts(){
+
+            productFactory.getProducts(function(data){
+              // console.log(data)
+
+              $scope.products = data; 
+            })
+          }
+          getProducts();
+
+      $scope.addProduct = function(){
+          // console.log($scope.newProduct);
+           // this is form data getting passed through from HTML View
+            productFactory.createProduct($scope.newProduct,function(){ 
+              $scope.newProduct = {};    // sets input fields to clear.
+               
+              getProducts()              
+            });
+    
+          }
+
+    }
+
+    function dashController(customerFactory, orderFactory, productFactory, $scope){
+
+          $scope.customers = [];
+          $scope.products = [];
+          $scope.newOrder = {};
+      function getCustomers(){
+
+            customerFactory.list(function(data){
+              $scope.customers = data;
+              console.log($scope.customers[0].name)
+              $scope.newOrder.name = $scope.customers[0].name; 
+            })
+          }
+          getCustomers();
+
+          function getProducts(){
+
+            productFactory.getProducts(function(data){
+              $scope.products = data; 
+              // console.log($scope.products[0].productName);
+              $scope.newOrder.product = $scope.products[0].productName;
+            })
+          }
+          getProducts();
+
+          function getOrders(){
+
+            orderFactory.getOrders(function(data){
+              console.log(data, "this is coming from my factory var customers, it's my hard coded object");
+              $scope.orders = data; // $scope.users makes 'users' object available to be used in the html with ng-repeat. This also gets updated anytime a new user is added.
+
+            })
+          }
+          getOrders();
+
+    }
+
+
+    
+
+    </script>
+  </head>
+<style type="text/css">
+  #layout{
+    width: 600px;
+    height: auto;
+    /*border: 1px solid blue;
+    border-radius: 30px;*/
+    margin-top: 10px;
+  }
+
+  #form{
+    width: 520px;
+  }
+  #form label{
+    padding-right: 10px;
+  }
+  #form2{
+    width: 520px;
+  }
+  #form2 select{
+    width: 300px;
+    padding-right: 10px;
+    margin-top: 15px;
+  }
+   #form2 label{
+    width: 100px;
+    padding-right: 10px;
+    margin-top: 14px;
+  }
+  #topNav{
+    font-weight: bold;
+    font-size: 1.5em;
+  }
+  .fontWeight{
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+
+  #orderButton{
+    margin-top: 10px;
+    margin-right: 90px;
+  }
+
+  #quant{
+    width: 300px;
+    padding-right: 10px;
+    margin-top: 15px;
+  }
+
+  #filter{
+    width: 50px;
+  }s
+
+  #productForm h4{
+    width: 200px;
+  }
+
+  #productsTable{
+    display: inline-block;
+  }
+  
+  a{
+    padding-left: 20px;
+  }
+  img{
+    width: 200px;
+    height: 200px;
+  }
+
+  p{
+    text-align: center;
+    font-weight: bold;
+    display: block;
+
+  }
+  #viewMore{
+    left-margin: auto;
+    right-margin: auto;
+    text-align: center;
+    font-size: 1.5em;
+
+  }
+
+  
+</style>
+  <body>
+    <div ng-app='myApp' class="container">
+      <div class="container">
+            <div id="topNav">
+            <a href="#/dashboard">Dahsboard</a> | <a href="#/products">Products</a> | <a href="#/orders">Orders</a> | <a href="#/customers">Customers</a> | <a href="#/settings">Settings</a>
+            </div>
+      </div>
+      <div ng-view="">
+      </div>
+    </div>
+  </body>
+</html>

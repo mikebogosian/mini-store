@@ -1,0 +1,37 @@
+<div  class="container">
+		
+		    <h3>Add Customer</h3>
+			<form class="form-horizontal" role="form" id="form" >
+				<div class="form-group">
+				    <label class="control-label col-sm-2" for="name">Customer: </label>
+				    <div class="col-sm-10">
+				      <input type="text" class="form-control" id="name" placeholder="enter name" ng-model='newCustomer.name' >
+					</div>
+				</div>
+								
+				<div class="form-group"> 
+				    <div class="col-sm-offset-2 col-sm-10">
+				      <button type="submit" class="btn btn-success pull-right" ng-click="addCustomer(data)">Add</button>
+				    </div>
+				</div>
+				<input type="text" ng-model='filter_name' placeholder="  filter names" / class="pull-right">
+			</form>
+			
+		  	<table class="table" id="layout" >
+		  	
+			    <thead>
+			      <tr>
+			        <th>Customer Name</th>			     
+			        <th>Created Date</th>
+			        <th>Actions</th>
+			      </tr>
+			    </thead>
+			    <tbody ng-repeat="customer in customers | filter: filter_name">
+			      <tr>
+			        <td class="fontWeight">{{ customer.name }}</td>
+			        <td class="fontWeight">{{ customer.createdAt | date:format: timezone }}</td>
+			        <td><button class="btn btn-danger" ng-click="removeCustomer(customer)">Remove</button></td>
+			      </tr>
+			    </tbody>
+			 </table>
+</div>
