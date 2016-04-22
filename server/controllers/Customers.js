@@ -5,7 +5,7 @@ module.exports = (function() {
  return {
   find: function(req, res) {
      Customer.find({}, function(err, results) {
-      // console.log(results)
+      console.log(results)
        if(err) {
          console.log(err);
        } else {

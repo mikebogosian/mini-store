@@ -15,7 +15,7 @@ module.exports = (function() {
    })
   },
   createOrder: function(req, res) {
-    console.log(req.body, "This is coming from my database")
+    console.log(req.body, "This is coming from my database this is good.")
 
     Product.findOne({productName: req.body.product.productName}, function(err, product){
       if(err){

@@ -9,7 +9,7 @@ module.exports = (function() {
        if(err) {
          console.log(err);
        } else {
-        // console.log(results);
+        console.log(results);
          res.json(results);
        }
    })
